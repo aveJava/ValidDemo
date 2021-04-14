@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Form</title>
+</head>
+<body>
+
+    <!-- Форма для редактирования объекта, положенного в модель как EditableObject -->
+    <!-- Отправляется на контроллер get -->
+    <form th:method="POST" th:action="@{/}" th:object="${EditableObject}">
+        <!-- Единственное редактируемое поле объекта -->
+        <label for="textField">Поле textField</label>
+        <input type="text" th:field="*{textField}" id="textField">
+        <!-- Если валидатор нашел ошибки, то показываем сообщение "Ошибки!!!" -->
+        <div th:each="error : ${errors}">
+            <p th:text="${error}"></p>
+        </div>
+        <div th:if="${#fields.hasAnyErrors()}" style="color: firebrick">Ошибки!!!</div>
+    </form>
+
+</body>
+</html>
