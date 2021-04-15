@@ -11,6 +11,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import valid.models.MyObject;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -18,49 +19,38 @@ public class ValidFormController {
 
     @GetMapping("/")
     public String get(Model model) {
-        System.out.println("Начал работать get-контроллер");
         // кладем редактируемый объект как EditableObject (если он уже есть, то не кладем)
         if (!model.containsAttribute("EditableObject")) {
             model.addAttribute("EditableObject", new MyObject());
-            System.out.println("get-контроллер положил новый EditableObject в модель");
-        } else System.out.println("get-контроллер не стал класть новый EditableObject в модель, т.к. он уже в ней есть");
-        System.out.println("get-контроллер выдал форму редактирования");
+        }
         // показываем пользователю форму редактирования
         return "form";
     }
 
     @PostMapping("/")
-    public String post(@Valid @ModelAttribute("EditableObject") MyObject obj, BindingResult binding, RedirectAttributes redirAttr) {
-        System.out.println("Начал работать post-контроллер");
-
-//        if (binding.hasErrors()) {
-//            return "form";
-//        }
+    public String post(@Valid @ModelAttribute("EditableObject") MyObject obj,
+                       BindingResult binding, RedirectAttributes redirAttr) {
 
         if (binding.hasErrors()) {
-            System.out.println("Обнаружены ошибки");
-
-            redirAttr.addFlashAttribute("errors", binding.getAllErrors());
+            // получение списка сообщений об ошибках из BindingResult
+            List<String> errMessages = new ArrayList<>();
+            for (ObjectError err : binding.getAllErrors()) {
+                errMessages.add(err.getDefaultMessage());
+            }
+            // передача списка сообщений об ошибках в модель контроллера, который будет вызван по редиректу, как атрибут errors
+            redirAttr.addFlashAttribute("errors", errMessages);
+            // передача объекта с ошибочно заполненными полями в модель контроллера, который будет вызван по редиректу, как атрибут EditableObject
+            redirAttr.addFlashAttribute("EditableObject", obj);
 
             // распечатка ошибки
             ObjectError error = binding.getAllErrors().get(0);
-            System.out.println("*+*+*+*+*+*+*+*+*+*+*+");
-            System.out.println("error.getObjectName() - " + error.getObjectName());
-            System.out.println("error.getDefaultMessage() - " + error.getDefaultMessage());
-            System.out.println("error.getArguments() : \n ---------------------");
-            for (Object err : error.getArguments()) {
-                System.out.println(err);
-            }
-            System.out.println("---------------------");
-            System.out.println("error.toString() : \n" + error.toString());
-            System.out.println("*+*+*+*+*+*+*+*+*+*+*+");
+            error.getObjectName();      // имя объекта (к полю которого относится данная ошибка), под которым он был передан на front
+            error.getDefaultMessage();  // сообщение для пользователя
+            error.getArguments();       // возвращает непонятно что
+            error.toString();           // возвращает всю информацию, которая содержится в данном объекте
 
-            redirAttr.addFlashAttribute("EditableObject", obj);
-            System.out.println("post-контроллер настроил RedirectAttributes и перенаправил на get-контроллер");
             return "redirect:/";
         }
-        redirAttr.addFlashAttribute("EditableObject", obj);
-        System.out.println("Нет никаких ошибок. Перенаправление в get-контроллер");
 
         return "redirect:/";
     }
